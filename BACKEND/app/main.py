@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -6,7 +7,16 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
 from app.core.config import settings
-from app.api.routes import auth
+from app.api.routes import auth, users
+from app.db.session import engine
+from app.models.base import Base
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Auto-create tables on startup
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    yield
 
 # Initialize rate limiter
 limiter = Limiter(key_func=get_remote_address, default_limits=["100/minute"])
@@ -14,6 +24,7 @@ limiter = Limiter(key_func=get_remote_address, default_limits=["100/minute"])
 app = FastAPI(
     title=settings.PROJECT_NAME,
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
+    lifespan=lifespan,
 )
 
 # Apply rate limiting
@@ -33,6 +44,7 @@ if settings.BACKEND_CORS_ORIGINS:
 
 # Include Routers
 app.include_router(auth.router, prefix=settings.API_V1_STR, tags=["Authentication"])
+app.include_router(users.router, prefix=f"{settings.API_V1_STR}/users", tags=["Users"])
 
 @app.get("/health", tags=["System"])
 @limiter.limit("5/minute")

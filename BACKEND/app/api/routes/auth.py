@@ -6,7 +6,9 @@ from sqlalchemy import select
 from app.api import deps
 from app.core import security
 from app.models.user import User
-from app.schemas.token import Token # Needs simple Pydantic model: access_token(str), token_type(str)
+from app.schemas.token import Token
+from app.schemas.user import UserCreate, UserRead
+from app.crud.user import get_user_by_email, create_user
 
 router = APIRouter()
 
@@ -18,11 +20,9 @@ async def login_access_token(
     """
     OAuth2 compatible token login, get an access token for future requests.
     """
-    # 1. Fetch user by email
     result = await db.execute(select(User).where(User.email == form_data.username))
     user = result.scalars().first()
 
-    # 2. Verify existence and password
     if not user or not security.verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -34,8 +34,24 @@ async def login_access_token(
             detail="Inactive user account"
         )
 
-    # 3. Issue Token
     return {
         "access_token": security.create_access_token(user.id),
         "token_type": "bearer"
     }
+
+@router.post("/register", response_model=UserRead)
+async def register_user(
+    user_in: UserCreate,
+    db: AsyncSession = Depends(deps.get_db),
+):
+    """
+    Register a new user.
+    """
+    user = await get_user_by_email(db, email=user_in.email)
+    if user:
+        raise HTTPException(
+            status_code=400,
+            detail="The user with this username already exists in the system",
+        )
+    user = await create_user(db, user_in)
+    return user
