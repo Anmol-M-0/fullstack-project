@@ -1,0 +1,30 @@
+project_root/
+├── alembic/                # Database migration scripts
+├── app/
+│   ├── api/
+│   │   ├── routes/
+│   │   │   ├── __init__.py
+│   │   │   └── auth.py     # Authentication endpoints
+│   │   ├── __init__.py
+│   │   └── deps.py         # Reusable dependencies (DB sessions, Auth)
+│   ├── core/
+│   │   ├── __init__.py
+│   │   ├── config.py       # Pydantic BaseSettings environment config
+│   │   └── security.py     # Hashing and JWT logic
+│   ├── crud/               # Reusable database operations (e.g., crud_user.py)
+│   ├── db/
+│   │   ├── __init__.py
+│   │   └── session.py      # Async engine and session maker setup
+│   ├── models/             # SQLAlchemy ORM Models
+│   │   ├── __init__.py
+│   │   ├── base.py         # Declarative base
+│   │   └── user.py         
+│   ├── schemas/            # Pydantic v2 Models (Validation/Serialization)
+│   │   ├── __init__.py
+│   │   ├── token.py        
+│   │   └── user.py         
+│   ├── main.py             # FastAPI app initialization, CORS, Rate Limiting
+│   └── tests/              # Pytest suite
+├── alembic.ini             # Alembic configuration
+├── requirements.txt
+└── .env                    # Environment variables (Do not commit)

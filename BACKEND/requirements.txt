@@ -1,0 +1,12 @@
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+sqlalchemy>=2.0.25
+alembic>=1.13.1
+asyncpg>=0.29.0          # Async Postgres driver
+passlib[bcrypt]>=1.7.4   # Password hashing
+PyJWT>=2.8.0             # JWT encoding/decoding
+slowapi>=0.1.4           # Rate limiting
+python-multipart>=0.0.6  # OAuth2 form data parsing
+aiosqlite>=0.19.0
