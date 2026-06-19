@@ -18,12 +18,20 @@ async def get_current_user(
     db: AsyncSession = Depends(get_db),
     token: str = Depends(oauth2_scheme)
 ) -> User:
+    """
+    AUTHENTICATION FLOW - STEP 3 (Protected Request Verification)
+    1. Extracts Bearer token from incoming requests using oauth2_scheme.
+    2. Decodes JWT using pyjwt, validating signature with settings.SECRET_KEY.
+    3. Checks token expiration time.
+    4. Fetches and validates active status of corresponding user record.
+    """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
+        # Decode the JWT token using standard HS256 algorithm and signature key
         payload = jwt.decode(
             token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
         )
@@ -31,9 +39,10 @@ async def get_current_user(
         if user_id is None:
             raise credentials_exception
     except jwt.PyJWTError:
+        # Fails validation on signature mismatch, modification, or expiration
         raise credentials_exception
     
-    # Retrieve user securely via ORM
+    # Retrieve user securely via ORM context
     result = await db.execute(select(User).where(User.id == int(user_id)))
     user = result.scalars().first()
     
